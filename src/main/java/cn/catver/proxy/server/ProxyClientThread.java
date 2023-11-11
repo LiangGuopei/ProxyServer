@@ -63,7 +63,7 @@ public class ProxyClientThread{
                         Properties properties = new Properties();
                         properties.load(new ByteArrayInputStream(l.toString().getBytes()));
                         String version = properties.getOrDefault("version","none").toString();
-                        if(!version.equalsIgnoreCase("v1")){
+                        if(!version.equalsIgnoreCase(ProxyServer.version)){
                             throw new RuntimeException("版本不一致");
                         }
                         int port = Integer.getInteger(properties.getOrDefault("port",0).toString(),0);
