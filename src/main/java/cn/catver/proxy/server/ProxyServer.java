@@ -15,12 +15,20 @@ public class ProxyServer {
     public static boolean stopSignal = false;
 
     public static HashMap<UUID,ProxyClientThread> threads = new HashMap<>();
+    public static int PORT = 25500;
 
     public static void main(String[] args) {
+        if(args.length == 1){
+            try{
+                PORT = Integer.parseInt(args[0]);
+            }catch (NumberFormatException e){
+
+            }
+        }
         new ProxyServerCommandInput();
         try{
-            serverSocket = new ServerSocket(25500);
-            System.out.println("server start at 25500");
+            serverSocket = new ServerSocket(PORT);
+            System.out.println(String.format("server start at %d", PORT));
             new Thread(() -> {
                 Scanner scanner = new Scanner(System.in);
                 String line;
