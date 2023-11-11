@@ -94,7 +94,9 @@ public class ProxyClientThread{
 
 
             }catch (Exception e){
-                e.printStackTrace();
+                //e.printStackTrace();
+                stopSignal = true;
+                kt.interrupt();
             }
         }
     }
@@ -131,7 +133,7 @@ public class ProxyClientThread{
                     try {
                         client.close();
                         proxy.close();
-                    } catch (IOException ex) {
+                    } catch (Exception ex) {
 
                     }
                     System.out.println("a client disconnect id: "+id);
