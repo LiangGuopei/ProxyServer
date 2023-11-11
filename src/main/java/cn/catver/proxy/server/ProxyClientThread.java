@@ -1,17 +1,12 @@
 package cn.catver.proxy.server;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
-import java.util.Timer;
 import java.util.UUID;
 
 public class ProxyClientThread{
     Socket client;
     Socket proxy;
-
     ClientThread ct;
     ProxyThread pt;
     boolean stopSignal = false;
@@ -28,6 +23,20 @@ public class ProxyClientThread{
         }catch (Exception e){
             throw new RuntimeException("error to create proxyclientthread");
         }
+    }
+
+    public void onRecvDataFromClient(int data) throws IOException {
+        proxy.getOutputStream().write(data);
+    }
+
+    public void onRecvDataFromProxy(int data) throws IOException{
+        client.getOutputStream().write(data);
+    }
+
+    private void onStop(){
+        ProxyServer.threads.remove(id,this);
+        kt.interrupt();
+        stopSignal = true;
     }
 
     class ClientThread extends Thread{
@@ -49,34 +58,25 @@ public class ProxyClientThread{
                         System.out.println("client "+id+" connect to "+port);
                     }catch (Exception e){
                         client.close();
+                        kt.interrupt();
                         stopSignal = true;
-                        onStop();
                         return;
                     }
                 }
-                OutputStream os = proxy.getOutputStream();
 
                 int data;
-                while(true){
+                while(!stopSignal){
                     data = is.read();
-                    if(ProxyServer.stopSignal || stopSignal){
-                        onStop();
-                        client.close();
-                        proxy.close();
-                        return;
-                    }
                     if(data != -1){
-                        os.write(data);
+                        onRecvDataFromClient(data);
                     }else {
+                        kt.interrupt();
                         stopSignal = true;
                     }
                 }
 
 
             }catch (Exception e){
-                if(e.getMessage().equalsIgnoreCase("Socket closed") && (stopSignal || ProxyServer.stopSignal)){
-                    return;
-                }
                 e.printStackTrace();
             }
         }
@@ -87,29 +87,19 @@ public class ProxyClientThread{
         @Override
         public void run() {
             try{
-                OutputStream os = client.getOutputStream();
-
                 InputStream is = proxy.getInputStream();
                 int data;
-                while (true){
+                while (!stopSignal){
                     data = is.read();
-                    if(ProxyServer.stopSignal || stopSignal){
-                        onStop();
-                        proxy.close();
-                        client.close();
-                        return;
-                    }
-                   // System.out.println(data);
                     if(data != -1){
-                        os.write(data);
+                        onRecvDataFromProxy(data);
                     }else{
+                        kt.interrupt();
                         stopSignal = true;
                     }
                 }
             }catch (Exception e){
-                if(!e.getMessage().equalsIgnoreCase("Socket closed") && (stopSignal || ProxyServer.stopSignal)){
-                    e.printStackTrace();
-                }
+                e.printStackTrace();
             }
         }
     }
@@ -118,18 +108,22 @@ public class ProxyClientThread{
         @Override
         public void run() {
             while (true){
-                if(stopSignal || ProxyServer.stopSignal || Thread.interrupted()){
+                try {
+                    Thread.sleep(1000000);
+                } catch (InterruptedException e) {
+                    try {
+                        client.close();
+                        proxy.close();
+                    } catch (IOException ex) {
+
+                    }
                     System.out.println("a client disconnect id: "+id);
+                    onStop();
                     break;
                 }
             }
-            try{
-                Thread.sleep(ProxyServer.KILLTHREADATWHATTIMES);
-                ct.stop();
-                pt.stop();
-            }catch (Exception e){
-
-            }
+            ct.stop();
+            pt.stop(); //KillThread能醒其实这俩早退出了
         }
     }
 
@@ -137,17 +131,12 @@ public class ProxyClientThread{
         try{
             ct = new ClientThread();
             pt = new ProxyThread();
-            ct.start();
             kt = new KillThread();
-            kt.start();
+            ct.start(); // ClientThread启动
+            kt.start(); // KillThread开始睡觉
             //pt.start();
         }catch (Exception e){
             throw new RuntimeException("start error msg: "+e.getMessage());
         }
-    }
-
-    private void onStop(){
-        ProxyServer.threads.remove(id,this);
-        kt.interrupt();
     }
 }

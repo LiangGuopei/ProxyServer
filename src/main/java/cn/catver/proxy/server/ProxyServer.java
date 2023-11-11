@@ -3,6 +3,7 @@ package cn.catver.proxy.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -46,6 +47,13 @@ public class ProxyServer {
                 System.exit(0);
             }
         }
+    }
+
+    public static void sendStopSignalToChildrenThread(){
+        for (Map.Entry<UUID, ProxyClientThread> entry : threads.entrySet()) {
+            entry.getValue().kt.interrupt(); //发送中断信号，让正在睡觉的线程被唤醒
+        }
+        threads.clear();
     }
 
     public static boolean isValid(int p){ //判断端口是否有效，防止映射敏感端口

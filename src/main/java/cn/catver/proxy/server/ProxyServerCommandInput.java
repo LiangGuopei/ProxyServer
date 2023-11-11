@@ -14,10 +14,11 @@ import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
 public class ProxyServerCommandInput {
     static CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
     public ProxyServerCommandInput(){
-        { // quit exit stop指令：退出服务器
-            CommandNode<Object> node = dispatcher.register(literal("quit").executes(commandContext -> {
+        { // exit指令：退出服务器
+            dispatcher.register(literal("exit").executes(commandContext -> {
                 System.out.println("server try to stop");
                 ProxyServer.stopSignal = true;
+                ProxyServer.sendStopSignalToChildrenThread();
                 try {
                     ProxyServer.serverSocket.close();
                 } catch (IOException e) {
@@ -25,14 +26,18 @@ public class ProxyServerCommandInput {
                 }
                 return 1;
             }));
-            dispatcher.register(literal("exit").redirect(node));
-            dispatcher.register(literal("stop").redirect(node));
-
         }
 
         {
             dispatcher.register(literal("foo").executes(commandContext -> {
                 System.out.println("foo!");
+                return 1;
+            }));
+        }
+
+        { //list 指令 : 列出已连接的数量
+            dispatcher.register(literal("list").executes(commandContext -> {
+                System.out.println(ColorText.CYAN(String.format("已连接%d个", ProxyServer.threads.size())));
                 return 1;
             }));
         }
