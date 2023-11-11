@@ -2,10 +2,7 @@ package cn.catver.proxy.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 
 public class ProxyServer {
 
@@ -66,5 +63,16 @@ public class ProxyServer {
 
     public static boolean isValid(int p){ //判断端口是否有效，防止映射敏感端口
         return p >= 30000 && p < 30051;
+    }
+
+    public static void stopServer(){
+        System.out.println("server try to stop");
+        ProxyServer.stopSignal = true;
+        ProxyServer.sendStopSignalToChildrenThread();
+        try {
+            ProxyServer.serverSocket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

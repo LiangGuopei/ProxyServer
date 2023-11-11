@@ -16,14 +16,7 @@ public class ProxyServerCommandInput {
     public ProxyServerCommandInput(){
         { // exit指令：退出服务器
             dispatcher.register(literal("exit").executes(commandContext -> {
-                System.out.println("server try to stop");
-                ProxyServer.stopSignal = true;
-                ProxyServer.sendStopSignalToChildrenThread();
-                try {
-                    ProxyServer.serverSocket.close();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                ProxyServer.stopServer();
                 return 1;
             }));
         }
@@ -41,6 +34,7 @@ public class ProxyServerCommandInput {
                 return 1;
             }));
         }
+
         System.out.println("register command finish");
     }
     public static void run(String l){

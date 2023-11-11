@@ -49,6 +49,10 @@ public class ProxyClientThread{
                 {
                     BufferedReader br = new BufferedReader(new InputStreamReader(is));
                     String l = br.readLine();
+                    if(l.equalsIgnoreCase("getList")){
+                        
+                        return;
+                    }
                     try{
                         int port = Integer.parseInt(l);
                         if(!ProxyServer.isValid(port)) throw new RuntimeException(); //端口不合法，停止
