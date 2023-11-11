@@ -1,6 +1,8 @@
 package cn.catver.proxy.server;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.UUID;
 
@@ -44,15 +46,13 @@ public class ProxyClientThread{
         @Override
         public void run() {
             try{
+                InetSocketAddress inetAddress = (InetSocketAddress) client.getRemoteSocketAddress();
+                System.out.println(String.format("PROXY TCP4 %s %s %d %d\r\n", inetAddress.getHostString(),InetAddress.getLocalHost().getHostAddress(),inetAddress.getPort(),ProxyServer.PORT));
                 InputStream is = client.getInputStream();
 
                 {
                     BufferedReader br = new BufferedReader(new InputStreamReader(is));
                     String l = br.readLine();
-                    if(l.equalsIgnoreCase("getList")){
-                        
-                        return;
-                    }
                     try{
                         int port = Integer.parseInt(l);
                         if(!ProxyServer.isValid(port)) throw new RuntimeException(); //端口不合法，停止
@@ -118,7 +118,7 @@ public class ProxyClientThread{
                     try {
                         client.close();
                         proxy.close();
-                    } catch (IOException ex) {
+                    } catch (Exception ex) {
 
                     }
                     System.out.println("a client disconnect id: "+id);
