@@ -2,6 +2,7 @@ package cn.catver.proxy.server;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Properties;
 import java.util.UUID;
 
 public class ProxyClientThread{
@@ -48,9 +49,25 @@ public class ProxyClientThread{
 
                 {
                     BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                    String l = br.readLine();
+                    StringBuilder l = new StringBuilder();
+                    String n;
+                    while (true){
+                        n = br.readLine();
+                        if(n.equalsIgnoreCase("---end---")){
+                            break;
+                        }else{
+                            l.append(n).append("\n");
+                        }
+                    }
                     try{
-                        int port = Integer.parseInt(l);
+                        Properties properties = new Properties();
+                        properties.load(new ByteArrayInputStream(l.toString().getBytes()));
+                        String version = properties.getOrDefault("version","none").toString();
+                        if(!version.equalsIgnoreCase("v1")){
+                            throw new RuntimeException("版本不一致");
+                        }
+                        int port = Integer.getInteger(properties.getOrDefault("port",0).toString(),0);
+                        //int port = Integer.parseInt(l);
                         if(!ProxyServer.isValid(port)) throw new RuntimeException(); //端口不合法，停止
                         proxy = new Socket("127.0.0.1",port);
                         ProxyClientThread.this.port = port;

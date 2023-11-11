@@ -6,7 +6,7 @@ import java.util.*;
 
 public class ProxyServer {
 
-    public static final int KILLTHREADATWHATTIMES = 3; //3秒后杀死pt与ct
+    public static String version = "ver1"; //协议版本
 
     public static ServerSocket serverSocket;
     public static boolean stopSignal = false;
@@ -14,7 +14,10 @@ public class ProxyServer {
     public static HashMap<UUID,ProxyClientThread> threads = new HashMap<>();
     public static int PORT = 25500;
 
+
+
     public static void main(String[] args) {
+
         if(args.length == 1){
             try{
                 PORT = Integer.parseInt(args[0]);
